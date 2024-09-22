@@ -143,7 +143,7 @@ class EnhancedSelfImprovingSearch:
 
     def evaluate_scraped_content(self, user_query: str, scraped_content: Dict[str, str]) -> Tuple[str, str]:
         user_query_short = user_query[:200]
-        prompt = """
+        prompt = f"""
 Evaluate if the following scraped content contains sufficient information to answer the user's question comprehensively:
 
 User's question: "{user_query_short}"
@@ -176,7 +176,7 @@ Decision: [ONLY 'answer' if content is sufficient, or 'refine' if more informati
 
     def formulate_query(self, user_query: str, attempt: int) -> Tuple[str, str]:
         user_query_short = user_query[:200]
-        prompt = """
+        prompt = f"""
 Based on the following user question, formulate a concise and effective search query:
 "{user_query_short}"
 Your task:
@@ -263,7 +263,7 @@ Do not provide any additional information or explanation.
             print(f"URL: {result.get('href', 'N/A')}\n")
 
     def select_relevant_pages(self, search_results: List[Dict], user_query: str) -> List[str]:
-        prompt = """
+        prompt = f"""
 Given the following search results for the user's question: "{user_query}"
 Select the 2 most relevant results to scrape and analyze. Explain your reasoning for each selection.
 
@@ -354,7 +354,7 @@ Reasoning: [Your reasoning for the selections]
 
     def generate_final_answer(self, user_query: str, scraped_content: Dict[str, str]) -> str:
         user_query_short = user_query[:200]
-        prompt = """
+        prompt = f"""
 You are an AI assistant. Provide a comprehensive and detailed answer to the following question using ONLY the information provided in the scraped content. Do not include any references or mention any sources. Answer directly and thoroughly.
 
 Question: "{user_query_short}"
