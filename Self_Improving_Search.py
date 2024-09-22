@@ -73,6 +73,7 @@ class EnhancedSelfImprovingSearch:
     def print_searching(self):
         print(Fore.MAGENTA + "📝 Searching..." + Style.RESET_ALL)
 
+
     def search_and_improve(self, user_query: str) -> str:
         attempt = 0
         while attempt < self.max_attempts:
@@ -119,18 +120,63 @@ class EnhancedSelfImprovingSearch:
 
                 self.print_thinking()
 
-                return self.generate_final_answer(user_query, scraped_content)
+                # Evaluate if the scraped content is sufficient to answer the query
+                evaluation, decision = self.evaluate_scraped_content(user_query, scraped_content)
+                print(f"{Fore.MAGENTA}Evaluation: {evaluation}{Style.RESET_ALL}")
+                print(f"{Fore.MAGENTA}Decision: {decision}{Style.RESET_ALL}")
+
+                if decision == "answer":
+                    return self.generate_final_answer(user_query, scraped_content)
+                elif decision == "refine":
+                    print(f"{Fore.YELLOW}Refining search...{Style.RESET_ALL}")
+                    attempt += 1
+                else:
+                    print(f"{Fore.RED}Unexpected decision. Proceeding to answer.{Style.RESET_ALL}")
+                    return self.generate_final_answer(user_query, scraped_content)
 
             except Exception as e:
                 print(f"{Fore.RED}An error occurred during search attempt. Check the log file for details.{Style.RESET_ALL}")
                 logger.error(f"An error occurred during search: {str(e)}", exc_info=True)
                 attempt += 1
 
-        return self.generate_final_answer(user_query, {})  # Empty scraped_content if all attempts fail
+        return self.synthesize_final_answer(user_query)
+
+    def evaluate_scraped_content(self, user_query: str, scraped_content: Dict[str, str]) -> Tuple[str, str]:
+        user_query_short = user_query[:200]
+        prompt = """
+Evaluate if the following scraped content contains sufficient information to answer the user's question comprehensively:
+
+User's question: "{user_query_short}"
+
+Scraped Content:
+{self.format_scraped_content(scraped_content)}
+
+Your task:
+1. Determine if the scraped content provides enough relevant and detailed information to answer the user's question thoroughly.
+2. If the information is sufficient, decide to 'answer'. If more information or clarification is needed, decide to 'refine' the search.
+
+Respond using EXACTLY this format:
+Evaluation: [Your evaluation of the scraped content]
+Decision: [ONLY 'answer' if content is sufficient, or 'refine' if more information is needed]
+"""
+        max_retries = 3
+        for attempt in range(max_retries):
+            with OutputRedirector() as output:
+                response = self.llm(prompt, max_tokens=200, stop=None)
+            llm_output = output.getvalue()
+            logger.info(f"LLM Output in evaluate_scraped_content:\n{llm_output}")
+            response_text = response['choices'][0]['text'].strip()
+            
+            parsed_response = self.parser.parse_llm_response(response_text)
+            if parsed_response and 'decision' in parsed_response and parsed_response['decision'] in ['answer', 'refine']:
+                return parsed_response.get('reasoning', "No explanation provided."), parsed_response['decision']
+
+        logger.warning("Failed to parse evaluation response. Defaulting to 'refine'.")
+        return "Failed to evaluate content.", "refine"
 
     def formulate_query(self, user_query: str, attempt: int) -> Tuple[str, str]:
         user_query_short = user_query[:200]
-        prompt = f"""
+        prompt = """
 Based on the following user question, formulate a concise and effective search query:
 "{user_query_short}"
 Your task:
@@ -217,7 +263,7 @@ Do not provide any additional information or explanation.
             print(f"URL: {result.get('href', 'N/A')}\n")
 
     def select_relevant_pages(self, search_results: List[Dict], user_query: str) -> List[str]:
-        prompt = f"""
+        prompt = """
 Given the following search results for the user's question: "{user_query}"
 Select the 2 most relevant results to scrape and analyze. Explain your reasoning for each selection.
 
@@ -308,7 +354,7 @@ Reasoning: [Your reasoning for the selections]
 
     def generate_final_answer(self, user_query: str, scraped_content: Dict[str, str]) -> str:
         user_query_short = user_query[:200]
-        prompt = f"""
+        prompt = """
 You are an AI assistant. Provide a comprehensive and detailed answer to the following question using ONLY the information provided in the scraped content. Do not include any references or mention any sources. Answer directly and thoroughly.
 
 Question: "{user_query_short}"
