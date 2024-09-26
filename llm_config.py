@@ -1,6 +1,6 @@
 # llm_config.py
 
-MODEL_PATH = "/home/james/llama.cpp/models/Phi-3-medium-128k-instruct-Q6_K.gguf"
+MODEL_PATH = ("Phi-3-medium-4k-instruct-Q6_K.gguf")
 
 # LLM settings
 LLM_CONFIG = {

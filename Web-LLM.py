@@ -79,18 +79,21 @@ def print_header():
     The AI will process your input, perform a search if requested,
     and provide an informed response.
 
-    Press CTRL+D to submit your input, and type 'quit' to exit.
+    Press Enter to submit your input, and type 'quit' to exit.
     """ + Style.RESET_ALL)
 
 def get_multiline_input():
     print(Fore.GREEN + "📝 Enter your message (Press CTRL+D to submit):" + Style.RESET_ALL)
     lines = []
-    while True:
+    getinput = True
+    while getinput:
         try:
             line = input()
             lines.append(line)
+            getinput = False
         except EOFError:
             break
+            
     return "\n".join(lines)
 
 def print_thinking():
@@ -100,7 +103,7 @@ def initialize_llm():
     try:
         print(Fore.YELLOW + "Initializing LLM..." + Style.RESET_ALL)
         llm_config = get_llm_config()
-        llm_config['verbose'] = False  # Suppress verbose output
+        llm_config['verbose'] = True  # Show verbose output
         with OutputRedirector() as output:
             llm = Llama(**llm_config)
         initialization_output = output.getvalue()
@@ -132,14 +135,13 @@ def print_assistant_response(response):
 def print_footer():
     print(Fore.CYAN + Style.BRIGHT + """
     ╔══════════════════════════════════════════════════════════╗
-    ║  Type 'quit' to exit | CTRL+D to submit                  ║
+    ║  Type 'quit' to exit | Enter to submit                   ║
     ╚══════════════════════════════════════════════════════════╝
     """ + Style.RESET_ALL)
-
+    
 def main():
     print_header()
     llm = None
-
     while True:
         user_input = get_multiline_input()
         if user_input.lower().strip() == 'quit':
