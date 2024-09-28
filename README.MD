@@ -88,3 +88,7 @@ I tried my best to create something that allows for the use of local llama.cpp r
 Web-LLM Assistant represents countless hours of learning, coding, and problem-solving and is actually my first ever attempt at anything coding related especially anything I built from scratch.
 
 If anyone who knows a lot more then me wants to dive in and make this magnitudes better, that would be fantastic. I believe this is the best I can do at my current level of knowledge, it's still a work in proggress and has it's issues, but it's certainly better at searching the web then llama.cpp alone (which obviously cant at all). So at least in that respect I would say that my goal has been achieved although it certainly has it's problems, i'm pretty happy with what I made for my first ever coding project, would love to know what others think!
+
+## Fork Personal Note
+
+When I tried running the software, it would not work for me. I did some troublshooting and made some minor changes to the code in order to get it to work. I also changed the verbose setting to true because I wanted to see what the application was doing. With it now being able to query the internet, I may look into other ways to expand on it's capabilities. 
